@@ -26,6 +26,10 @@ import {
   clearOAuthData,
   initiateOAuth,
 } from "@/lib/oauth/mcp-oauth";
+import {
+  isLikelyOAuthRequiredConnectionError,
+  serverAdvertisesOAuth,
+} from "@/lib/oauth/auto-oauth-detection";
 import type { OAuthTestProfile } from "@/lib/oauth/profile";
 import { authFetch } from "@/lib/session-token";
 import { useServerMutations, type RemoteServer } from "./useWorkspaces";
@@ -683,6 +687,88 @@ export function useServerState({
             }),
           );
         } else {
+          // "Just works" behavior: if a server rejects unauthenticated requests
+          // and also advertises OAuth well-known metadata, auto-start OAuth.
+          if (
+            formData.type === "http" &&
+            !formData.useOAuth &&
+            typeof formData.url === "string" &&
+            isLikelyOAuthRequiredConnectionError(String(result.error || ""))
+          ) {
+            try {
+              const advertisesOAuth = await serverAdvertisesOAuth(formData.url);
+              if (advertisesOAuth) {
+                dispatch({
+                  type: "UPSERT_SERVER",
+                  name: formData.name,
+                  server: {
+                    name: formData.name,
+                    config: mcpConfig,
+                    lastConnectionTime: new Date(),
+                    connectionStatus: "oauth-flow",
+                    retryCount: 0,
+                    enabled: true,
+                    useOAuth: true,
+                  } as ServerWithName,
+                });
+
+                const oauthResult = await initiateOAuth({
+                  serverName: formData.name,
+                  serverUrl: formData.url,
+                  clientId: formData.clientId,
+                  clientSecret: formData.clientSecret,
+                  scopes:
+                    formData.oauthScopes && formData.oauthScopes.length > 0
+                      ? formData.oauthScopes
+                      : undefined,
+                } as any);
+
+                if (oauthResult.success) {
+                  if (oauthResult.serverConfig) {
+                    const connectionResult = await testConnection(
+                      oauthResult.serverConfig,
+                      formData.name,
+                    );
+                    if (isStaleOp(formData.name, token)) return;
+                    if (connectionResult.success) {
+                      dispatch({
+                        type: "CONNECT_SUCCESS",
+                        name: formData.name,
+                        config: oauthResult.serverConfig,
+                        tokens: getStoredTokens(formData.name),
+                      });
+                      toast.success("Connected successfully with OAuth!");
+                      fetchAndStoreInitInfo(formData.name).catch((err) =>
+                        logger.warn("Failed to fetch init info", {
+                          serverName: formData.name,
+                          err,
+                        }),
+                      );
+                    } else {
+                      dispatch({
+                        type: "CONNECT_FAILURE",
+                        name: formData.name,
+                        error:
+                          connectionResult.error ||
+                          "OAuth connection test failed",
+                      });
+                      toast.error(
+                        `OAuth succeeded but connection failed: ${connectionResult.error}`,
+                      );
+                    }
+                  } else {
+                    toast.success(
+                      "OAuth flow initiated. You will be redirected to authorize access.",
+                    );
+                  }
+                  return;
+                }
+              }
+            } catch {
+              // Fall through to the normal connection failure.
+            }
+          }
+
           dispatch({
             type: "CONNECT_FAILURE",
             name: formData.name,
