@@ -385,7 +385,6 @@ async function main() {
   // Parse command line arguments
   const args = process.argv.slice(2);
   const envVars = {};
-  let parsingFlags = true;
   let ollamaModel = null;
   let mcpServerCommand = null;
   let mcpServerArgs = [];
@@ -401,6 +400,7 @@ async function main() {
   let useOAuth = false;
   const customHeaders = [];
   let verboseLogs = false;
+  let shouldOpenBrowser = true;
 
   // First pass: check for --verbose flag before processing other args
   for (const arg of args) {
@@ -419,7 +419,6 @@ async function main() {
     const arg = args[i];
 
     if (arg === "--") {
-      parsingFlags = false;
       continue;
     }
 
@@ -492,6 +491,11 @@ async function main() {
       continue;
     }
 
+    if (arg === "--no-open") {
+      shouldOpenBrowser = false;
+      continue;
+    }
+
     // New: --header for custom headers (repeatable)
     if (
       (arg === "--header" || arg === "-H") &&
@@ -525,9 +529,9 @@ async function main() {
       continue;
     }
 
-    // If we encounter a non-flag argument, treat it as MCP server command.
-    // After a "--", also allow command-like arguments that start with "-".
-    if (!arg.startsWith("-") || !parsingFlags) {
+    // If we encounter a non-flag argument (or an unknown dash-prefixed argument),
+    // treat it as MCP server command and stop parsing launcher flags.
+    if (!arg.startsWith("-")) {
       mcpServerCommand = arg;
       // Collect all remaining arguments as server arguments
       mcpServerArgs = args.slice(i + 1);
@@ -733,6 +737,8 @@ async function main() {
     envVars.SERVER_PORT = PORT;
     envVars.BASE_URL = `http://${baseHost}:${PORT}`;
     Object.assign(process.env, envVars);
+    logInfo(`Listening on ${envVars.BASE_URL}`);
+    logInfo(`Browser auto-open is ${shouldOpenBrowser ? "enabled" : "disabled"} (${shouldOpenBrowser ? "omit --no-open to keep enabled" : "set --no-open"})`);
   } catch (error) {
     logError(`Port configuration failed: ${error.message}`);
     throw error;
@@ -812,7 +818,7 @@ async function main() {
     // Wait a bit for the server to start up
     await delay(2000);
 
-    if (!cancelled) {
+    if (!cancelled && shouldOpenBrowser) {
       // Open the browser automatically
       // Use BASE_URL if set, otherwise construct from HOST and PORT
       // Default: localhost in development, 127.0.0.1 in production

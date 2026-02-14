@@ -34,6 +34,12 @@ To force a port:
 npx @ramarivera/mcpjam-inspector@latest --port 16274
 ```
 
+To skip opening the browser:
+
+```bash
+npx @ramarivera/mcpjam-inspector@latest --port 16274 --no-open
+```
+
 <img alt="MCPJam Inspector Demo" src="../docs/images/mcpjam-banner.png">
 
 # Table of contents
@@ -66,6 +72,10 @@ npx @ramarivera/mcpjam-inspector@latest
 
 ```bash
 npx @ramarivera/mcpjam-inspector@latest --port 16274
+```
+
+```bash
+npx @ramarivera/mcpjam-inspector@latest --port 16274 --no-open
 ```
 
 We have a Mac and Windows desktop app:
