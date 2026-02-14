@@ -10,7 +10,7 @@
 
 www.mcpjam.com
 
-[![npm version](https://img.shields.io/npm/v/@mcpjam/inspector?style=for-the-badge&color=blue)](https://www.npmjs.com/package/@mcpjam/inspector)
+[![npm version](https://img.shields.io/npm/v/@ramarivera/mcpjam-inspector?style=for-the-badge&color=blue)](https://www.npmjs.com/package/@ramarivera/mcpjam-inspector)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge)](https://opensource.org/licenses/Apache-2.0)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/JEnDtz8X6z)
 
@@ -25,7 +25,13 @@ No more ngrok or ChatGPT subscription needed. MCPJam is the fastest way to itera
 Start up the MCPJam inspector:
 
 ```bash
-npx @mcpjam/inspector@latest
+npx @ramarivera/mcpjam-inspector@latest
+```
+
+To force a port:
+
+```bash
+npx @ramarivera/mcpjam-inspector@latest --port 16274
 ```
 
 <img alt="MCPJam Inspector Demo" src="../docs/images/mcpjam-banner.png">
@@ -55,7 +61,11 @@ npx @mcpjam/inspector@latest
 We recommend starting MCPJam inspector via `npx`:
 
 ```bash
-npx @mcpjam/inspector@latest
+npx @ramarivera/mcpjam-inspector@latest
+```
+
+```bash
+npx @ramarivera/mcpjam-inspector@latest --port 16274
 ```
 
 We have a Mac and Windows desktop app:

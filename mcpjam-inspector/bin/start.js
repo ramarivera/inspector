@@ -418,46 +418,46 @@ async function main() {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
-    if (parsingFlags && arg === "--") {
+    if (arg === "--") {
       parsingFlags = false;
       continue;
     }
 
-    if (parsingFlags && arg === "--ollama" && i + 1 < args.length) {
+    if (arg === "--ollama" && i + 1 < args.length) {
       ollamaModel = args[++i];
       continue;
     }
 
-    if (parsingFlags && arg === "--port" && i + 1 < args.length) {
+    if (arg === "--port" && i + 1 < args.length) {
       const port = args[++i];
       envVars.PORT = port;
+      envVars.SERVER_PORT = port;
       continue;
     }
 
-    if (parsingFlags && arg === "--config" && i + 1 < args.length) {
+    if (arg === "--config" && i + 1 < args.length) {
       mcpConfigFile = args[++i];
       continue;
     }
 
-    if (parsingFlags && arg === "--server" && i + 1 < args.length) {
+    if (arg === "--server" && i + 1 < args.length) {
       mcpServerName = args[++i];
       continue;
     }
 
-    if (parsingFlags && (arg === "--rebuild" || arg === "--force-rebuild")) {
+    if (arg === "--rebuild" || arg === "--force-rebuild") {
       rebuildRequested = true;
       continue;
     }
 
     // New: --url for HTTP transport
-    if (parsingFlags && arg === "--url" && i + 1 < args.length) {
+    if (arg === "--url" && i + 1 < args.length) {
       httpUrl = args[++i];
       continue;
     }
 
     // New: --name for server display name
     if (
-      parsingFlags &&
       (arg === "--name" || arg === "--server-name") &&
       i + 1 < args.length
     ) {
@@ -467,7 +467,6 @@ async function main() {
 
     // New: --tab for initial tab navigation
     if (
-      parsingFlags &&
       (arg === "--tab" || arg === "--view") &&
       i + 1 < args.length
     ) {
@@ -476,26 +475,25 @@ async function main() {
     }
 
     // New: --bearer for Bearer token auth
-    if (parsingFlags && arg === "--bearer" && i + 1 < args.length) {
+    if (arg === "--bearer" && i + 1 < args.length) {
       bearerToken = args[++i];
       continue;
     }
 
     // New: --oauth flag to trigger OAuth flow
-    if (parsingFlags && arg === "--oauth") {
+    if (arg === "--oauth") {
       useOAuth = true;
       continue;
     }
 
     // New: --verbose flag to enable HTTP request logs in production
-    if (parsingFlags && (arg === "--verbose" || arg === "-v")) {
+    if (arg === "--verbose" || arg === "-v") {
       verboseLogs = true;
       continue;
     }
 
     // New: --header for custom headers (repeatable)
     if (
-      parsingFlags &&
       (arg === "--header" || arg === "-H") &&
       i + 1 < args.length
     ) {
@@ -513,7 +511,7 @@ async function main() {
       continue;
     }
 
-    if (parsingFlags && arg === "-e" && i + 1 < args.length) {
+    if (arg === "-e" && i + 1 < args.length) {
       const envVar = args[++i];
       const equalsIndex = envVar.indexOf("=");
 
@@ -527,8 +525,9 @@ async function main() {
       continue;
     }
 
-    // If we encounter a non-flag argument, treat it as MCP server command
-    if (parsingFlags && !arg.startsWith("-")) {
+    // If we encounter a non-flag argument, treat it as MCP server command.
+    // After a "--", also allow command-like arguments that start with "-".
+    if (!arg.startsWith("-") || !parsingFlags) {
       mcpServerCommand = arg;
       // Collect all remaining arguments as server arguments
       mcpServerArgs = args.slice(i + 1);
@@ -731,6 +730,7 @@ async function main() {
 
     // Update environment variables with the final port
     envVars.PORT = PORT;
+    envVars.SERVER_PORT = PORT;
     envVars.BASE_URL = `http://${baseHost}:${PORT}`;
     Object.assign(process.env, envVars);
   } catch (error) {
