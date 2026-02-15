@@ -41,6 +41,20 @@ function createSandboxProxyTestApp(): Hono {
     return c.body("<html><body>Sandbox Proxy</body></html>");
   });
 
+  // ChatGPT sandbox proxy route (mirrors server/routes/apps/chatgpt-apps/index.ts)
+  app.get("/api/apps/chatgpt-apps/sandbox-proxy", (c) => {
+    c.header("Content-Type", "text/html; charset=utf-8");
+    c.header("Cache-Control", "public, max-age=3600");
+    // Allow cross-origin framing between localhost and 127.0.0.1 for triple-iframe architecture
+    c.header(
+      "Content-Security-Policy",
+      "frame-ancestors 'self' http://localhost:* http://127.0.0.1:* https://localhost:* https://127.0.0.1:*",
+    );
+    // Remove X-Frame-Options as it doesn't support multiple origins (CSP frame-ancestors takes precedence)
+    c.res.headers.delete("X-Frame-Options");
+    return c.body("<html><body>Sandbox Proxy</body></html>");
+  });
+
   // Regular route for comparison (should keep X-Frame-Options)
   app.get("/api/mcp/health", (c) => c.json({ status: "ok" }));
 
@@ -91,6 +105,36 @@ describe("Sandbox Proxy CSP Headers", () => {
       expect(res.status).toBe(200);
       const body = await res.text();
       expect(body).toContain("<html>");
+    });
+  });
+
+  describe("GET /api/apps/chatgpt-apps/sandbox-proxy", () => {
+    it("sets Content-Security-Policy with frame-ancestors for localhost origins", async () => {
+      const res = await app.request("/api/apps/chatgpt-apps/sandbox-proxy");
+
+      const csp = res.headers.get("Content-Security-Policy");
+      expect(csp).toBe(
+        "frame-ancestors 'self' http://localhost:* http://127.0.0.1:* https://localhost:* https://127.0.0.1:*",
+      );
+    });
+
+    it("removes X-Frame-Options header to avoid conflict with CSP", async () => {
+      const res = await app.request("/api/apps/chatgpt-apps/sandbox-proxy");
+
+      // X-Frame-Options should be removed (CSP frame-ancestors takes precedence)
+      expect(res.headers.get("X-Frame-Options")).toBeNull();
+    });
+
+    it("sets correct Content-Type for HTML", async () => {
+      const res = await app.request("/api/apps/chatgpt-apps/sandbox-proxy");
+
+      expect(res.headers.get("Content-Type")).toBe("text/html; charset=utf-8");
+    });
+
+    it("sets Cache-Control to allow caching", async () => {
+      const res = await app.request("/api/apps/chatgpt-apps/sandbox-proxy");
+
+      expect(res.headers.get("Cache-Control")).toBe("public, max-age=3600");
     });
   });
 

@@ -445,7 +445,9 @@ chatgpt.get("/sandbox-proxy", (c) => {
     "Content-Security-Policy",
     "frame-ancestors 'self' http://localhost:* http://127.0.0.1:* https://localhost:* https://127.0.0.1:*",
   );
-  // Remove X-Frame-Options as it doesn't support multiple origins (CSP takes precedence)
+  // Remove X-Frame-Options as it doesn't support multiple origins (CSP takes precedence).
+  // The sandbox proxy is intentionally cross-origin (localhost <-> 127.0.0.1).
+  c.res.headers.delete("X-Frame-Options");
   return c.body(html);
 });
 
