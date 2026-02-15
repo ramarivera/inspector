@@ -50,14 +50,19 @@ type PortParseResult = {
   isExplicit: boolean;
 };
 
-function parsePort(value: string | undefined, fallback: number): PortParseResult {
+function parsePort(
+  value: string | undefined,
+  fallback: number,
+): PortParseResult {
   if (value === undefined || value.trim() === "") {
     return { value: fallback, isExplicit: false };
   }
 
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed) || parsed <= 0 || parsed > MAX_PORT_NUMBER) {
-    log.warn(`Ignoring invalid port value "${value}", using fallback ${fallback}`);
+    log.warn(
+      `Ignoring invalid port value "${value}", using fallback ${fallback}`,
+    );
     return { value: fallback, isExplicit: false };
   }
 
@@ -69,9 +74,7 @@ function getRequestedPort(): {
   hasExplicitPort: boolean;
 } {
   const explicitPort =
-    process.env.ELECTRON_PORT ??
-    process.env.SERVER_PORT ??
-    process.env.PORT;
+    process.env.ELECTRON_PORT ?? process.env.SERVER_PORT ?? process.env.PORT;
   const parsedPort = parsePort(explicitPort, DEFAULT_ELECTRON_PORT);
 
   return {
@@ -141,7 +144,9 @@ async function findAvailablePort(
   hasExplicitPort = false,
 ): Promise<number> {
   if (requestedPort < 1 || requestedPort > MAX_PORT_NUMBER) {
-    throw new Error(`Requested port ${requestedPort} is outside valid range 1-${MAX_PORT_NUMBER}`);
+    throw new Error(
+      `Requested port ${requestedPort} is outside valid range 1-${MAX_PORT_NUMBER}`,
+    );
   }
 
   if (await isPortAvailable(requestedPort, host)) {
@@ -154,7 +159,9 @@ async function findAvailablePort(
 
   const maxPort = Math.min(requestedPort + PORT_SCAN_LIMIT, MAX_PORT_NUMBER);
   if (maxPort <= requestedPort) {
-    throw new Error(`No available port found in range ${requestedPort}-${maxPort}`);
+    throw new Error(
+      `No available port found in range ${requestedPort}-${maxPort}`,
+    );
   }
 
   for (let port = requestedPort + 1; port <= maxPort; port++) {
@@ -179,7 +186,11 @@ async function startHonoServer(): Promise<number> {
   try {
     const hostname = app.isPackaged ? "127.0.0.1" : "localhost";
     const { port: requestedPort, hasExplicitPort } = getRequestedPort();
-    const port = await findAvailablePort(requestedPort, hostname, hasExplicitPort);
+    const port = await findAvailablePort(
+      requestedPort,
+      hostname,
+      hasExplicitPort,
+    );
 
     // Set environment variables to tell the server it's running in Electron
     process.env.ELECTRON_APP = "true";

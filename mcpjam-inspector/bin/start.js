@@ -192,9 +192,7 @@ async function findAvailablePort(
   const maxPort = Math.min(startPort + maxPortOffset, 65535);
 
   if (maxPort < startPort) {
-    throw new Error(
-      `No available port found in range ${startPort}-${maxPort}`,
-    );
+    throw new Error(`No available port found in range ${startPort}-${maxPort}`);
   }
 
   for (let port = startPort; port <= maxPort; port++) {
@@ -400,7 +398,7 @@ async function main() {
   let useOAuth = false;
   const customHeaders = [];
   let verboseLogs = false;
-  let shouldOpenBrowser = true;
+  let shouldOpenBrowser = false;
 
   // First pass: check for --verbose flag before processing other args
   for (const arg of args) {
@@ -456,19 +454,13 @@ async function main() {
     }
 
     // New: --name for server display name
-    if (
-      (arg === "--name" || arg === "--server-name") &&
-      i + 1 < args.length
-    ) {
+    if ((arg === "--name" || arg === "--server-name") && i + 1 < args.length) {
       serverDisplayName = args[++i];
       continue;
     }
 
     // New: --tab for initial tab navigation
-    if (
-      (arg === "--tab" || arg === "--view") &&
-      i + 1 < args.length
-    ) {
+    if ((arg === "--tab" || arg === "--view") && i + 1 < args.length) {
       initialTab = args[++i];
       continue;
     }
@@ -496,11 +488,13 @@ async function main() {
       continue;
     }
 
+    if (arg === "--open") {
+      shouldOpenBrowser = true;
+      continue;
+    }
+
     // New: --header for custom headers (repeatable)
-    if (
-      (arg === "--header" || arg === "-H") &&
-      i + 1 < args.length
-    ) {
+    if ((arg === "--header" || arg === "-H") && i + 1 < args.length) {
       const headerValue = args[++i];
       const equalsIndex = headerValue.indexOf("=");
       if (equalsIndex !== -1) {
@@ -723,7 +717,12 @@ async function main() {
         throw new Error(`Port ${requestedPort} is already in use`);
       }
     } else {
-      const resolvedPort = await findAvailablePort(requestedPort, host, 100, verboseLogs);
+      const resolvedPort = await findAvailablePort(
+        requestedPort,
+        host,
+        100,
+        verboseLogs,
+      );
       if (resolvedPort !== requestedPort) {
         logInfo(
           `Default port ${requestedPort} is busy. Using next available port ${resolvedPort}.`,
@@ -738,7 +737,9 @@ async function main() {
     envVars.BASE_URL = `http://${baseHost}:${PORT}`;
     Object.assign(process.env, envVars);
     logInfo(`Listening on ${envVars.BASE_URL}`);
-    logInfo(`Browser auto-open is ${shouldOpenBrowser ? "enabled" : "disabled"} (${shouldOpenBrowser ? "omit --no-open to keep enabled" : "set --no-open"})`);
+    logInfo(
+      `Browser auto-open is ${shouldOpenBrowser ? "enabled" : "disabled"} (${shouldOpenBrowser ? "use --no-open to disable" : "set --open to force open"})`,
+    );
   } catch (error) {
     logError(`Port configuration failed: ${error.message}`);
     throw error;

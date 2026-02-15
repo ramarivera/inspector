@@ -28,16 +28,16 @@ Start up the MCPJam inspector:
 npx @ramarivera/mcpjam-inspector@latest
 ```
 
-To force a port:
+To force a port (browser is disabled by default):
 
 ```bash
 npx @ramarivera/mcpjam-inspector@latest --port 16274
 ```
 
-To skip opening the browser:
+To open the browser when needed:
 
 ```bash
-npx @ramarivera/mcpjam-inspector@latest --port 16274 --no-open
+npx @ramarivera/mcpjam-inspector@latest --port 16274 --open
 ```
 
 <img alt="MCPJam Inspector Demo" src="../docs/images/mcpjam-banner.png">
@@ -75,7 +75,7 @@ npx @ramarivera/mcpjam-inspector@latest --port 16274
 ```
 
 ```bash
-npx @ramarivera/mcpjam-inspector@latest --port 16274 --no-open
+npx @ramarivera/mcpjam-inspector@latest --port 16274 --open
 ```
 
 We have a Mac and Windows desktop app:
