@@ -187,9 +187,7 @@ const app = new Hono().onError((err, c) => {
 
 // Load environment variables early so route handlers can read CONVEX_HTTP_URL
 const envFile =
-  process.env.NODE_ENV === "production"
-    ? ".env.production"
-    : ".env.development";
+  process.env.NODE_ENV === "production" ? ".env.production" : ".env.local";
 
 // Determine where to look for .env file:
 // 1. Electron: Resources folder
